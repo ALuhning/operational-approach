@@ -17,8 +17,12 @@ async function seed() {
 
     // Seed Users (hash passwords)
     for (const userData of seedData.users) {
+      // Add default password if missing (will be hashed by model hook)
+      if (!userData.password) {
+        userData.password = 'password123';
+      }
       // Don't re-hash if already hashed
-      if (!userData.password.startsWith('$2a$') && !userData.password.startsWith('$2b$')) {
+      else if (!userData.password.startsWith('$2a$') && !userData.password.startsWith('$2b$')) {
         userData.password = await bcrypt.hash(userData.password, 10);
       }
       await User.create(userData);
