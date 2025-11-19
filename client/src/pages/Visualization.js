@@ -42,13 +42,6 @@ import * as api from '../services/api';
 import GanttCanvas from '../components/GanttCanvas';
 
 const DOMAINS = ['land', 'sea', 'air', 'cyber', 'space'];
-const DOMAIN_COLORS = {
-  land: '#8B4513',
-  sea: '#1E90FF',
-  air: '#87CEEB',
-  cyber: '#9400D3',
-  space: '#000080',
-};
 
 const Visualization = () => {
   const { datasetId } = useParams();
@@ -217,14 +210,6 @@ const Visualization = () => {
         await api.bulkUpdateOAIs(updates);
         await loadDataset();
       } else if (type === 'imo') {
-        // Get all IMOs in the same LOE
-        const loeImos = Object.keys(oais.reduce((acc, o) => {
-          if (o.objective === item.objective && o.loe === item.loe) {
-            acc[o.imo] = true;
-          }
-          return acc;
-        }, {}));
-        
         // Reordering IMOs requires updating all subordinate OAIs
         // This is complex - for now, show a message
         setError('IMO reordering will be implemented in next update');

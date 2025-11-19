@@ -29,7 +29,6 @@ import {
   Visibility as ViewIcon,
   Download as DownloadIcon,
   AccountCircle,
-  MoreVert as MoreIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';

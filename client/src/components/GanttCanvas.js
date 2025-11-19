@@ -121,26 +121,6 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
     // Background
     ctx.clearRect(0, 0, width, height);
     
-    // Helper function to wrap text into multiple lines
-    const wrapText = (ctx, text, maxWidth) => {
-      const words = text.split(' ');
-      const lines = [];
-      let currentLine = words[0];
-      
-      for (let i = 1; i < words.length; i++) {
-        const word = words[i];
-        const width = ctx.measureText(currentLine + ' ' + word).width;
-        if (width < maxWidth) {
-          currentLine += ' ' + word;
-        } else {
-          lines.push(currentLine);
-          currentLine = word;
-        }
-      }
-      lines.push(currentLine);
-      return lines;
-    };
-    
     // Helper function to truncate text to fit width
     const truncateText = (ctx, text, maxWidth) => {
       if (ctx.measureText(text).width <= maxWidth) return text;
@@ -1028,6 +1008,7 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
     // Store items for hit detection
     setClickableItems(items);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [oais, filters, viewMode, canvasSize, problemStatement, dragOffset, verticalDragOffset]);
 
   return (
