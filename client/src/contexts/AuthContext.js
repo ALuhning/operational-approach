@@ -38,10 +38,6 @@ export const AuthProvider = ({ children }) => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = async (email, password) => {
     const response = await axios.post('/api/auth/login', { email, password });
