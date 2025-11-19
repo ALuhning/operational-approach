@@ -4,18 +4,11 @@ const bcrypt = require('bcryptjs');
 
 async function seed() {
   try {
-    await sequelize.authenticate();
-    console.log('Connected to database');
-
-    // Sync models (creates tables if they don't exist)
-    await sequelize.sync({ force: false });
-    console.log('Database synced');
-
     // Check if data already exists
     const userCount = await User.count();
     if (userCount > 0) {
       console.log('Database already has data. Skipping seed.');
-      process.exit(0);
+      return;
     }
 
     // Load seed data
@@ -45,12 +38,28 @@ async function seed() {
     console.log('OAIs seeded');
 
     console.log('✅ Seed completed successfully');
-    await sequelize.close();
-    process.exit(0);
   } catch (error) {
     console.error('Error seeding database:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-seed();
+// If run directly, execute and exit
+if (require.main === module) {
+  (async () => {
+    try {
+      await sequelize.authenticate();
+      console.log('Connected to database');
+      await sequelize.sync({ force: false });
+      console.log('Database synced');
+      await seed();
+      await sequelize.close();
+      process.exit(0);
+    } catch (error) {
+      console.error('Seed failed:', error);
+      process.exit(1);
+    }
+  })();
+}
+
+module.exports = seed;

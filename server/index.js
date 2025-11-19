@@ -76,6 +76,17 @@ const startServer = async () => {
     await sequelize.sync({ force: false });
     console.log('Database synchronized.');
 
+    // Auto-seed database if empty (production only)
+    if (process.env.NODE_ENV === 'production') {
+      const { User } = require('./models');
+      const userCount = await User.count();
+      if (userCount === 0) {
+        console.log('Database is empty. Running seed...');
+        const seedFunction = require('./seed.js');
+        await seedFunction();
+      }
+    }
+
     // Start server
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
