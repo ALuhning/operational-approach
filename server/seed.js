@@ -15,15 +15,17 @@ async function seed() {
     const seedData = JSON.parse(fs.readFileSync(__dirname + '/seed-data.json', 'utf8'));
     console.log(`Loaded seed data: ${seedData.users.length} users, ${seedData.datasets.length} datasets, ${seedData.oais.length} OAIs`);
 
-    // Seed Users (hash passwords)
+    // Seed Users (passwords are already hashed in export)
     for (const userData of seedData.users) {
-      // Add default password if missing (will be hashed by model hook)
+      // Password should already be hashed from export, but add default if missing
       if (!userData.password) {
-        userData.password = 'password123';
+        userData.password = 'password123'; // Will be hashed by model hook
       }
-      // Don't re-hash if already hashed
-      else if (!userData.password.startsWith('$2a$') && !userData.password.startsWith('$2b$')) {
-        userData.password = await bcrypt.hash(userData.password, 10);
+      // If password is already hashed (starts with $2a$ or $2b$), create without triggering hook
+      else if (userData.password.startsWith('$2a$') || userData.password.startsWith('$2b$')) {
+        // Create directly with hashed password, bypassing hooks
+        await User.create(userData, { hooks: false });
+        continue;
       }
       await User.create(userData);
     }

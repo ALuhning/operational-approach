@@ -6,26 +6,32 @@ async function exportData() {
     await sequelize.authenticate();
     console.log('Connected to database');
 
-    // Export Users
-    const users = await User.findAll();
+    // Export Users - use raw: true to get all fields including password
+    const users = await User.findAll({ raw: true });
     console.log(`Found ${users.length} users`);
 
     // Export Datasets
-    const datasets = await Dataset.findAll();
+    const datasets = await Dataset.findAll({ raw: true });
     console.log(`Found ${datasets.length} datasets`);
 
     // Export OAIs
-    const oais = await OAI.findAll();
+    const oais = await OAI.findAll({ 
+      raw: true,
+      order: [['datasetId', 'ASC'], ['id', 'ASC']]
+    });
     console.log(`Found ${oais.length} OAIs`);
 
     const exportData = {
-      users: users.map(u => u.toJSON()),
-      datasets: datasets.map(d => d.toJSON()),
-      oais: oais.map(o => o.toJSON())
+      users,
+      datasets,
+      oais
     };
 
     fs.writeFileSync('seed-data.json', JSON.stringify(exportData, null, 2));
-    console.log('Data exported to seed-data.json');
+    console.log('✅ Data exported to seed-data.json');
+    console.log(`   Users: ${users.length}`);
+    console.log(`   Datasets: ${datasets.length}`);
+    console.log(`   OAIs: ${oais.length}`);
 
     await sequelize.close();
   } catch (error) {
