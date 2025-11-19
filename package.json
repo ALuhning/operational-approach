@@ -1,0 +1,22 @@
+{
+  "name": "operational-approach",
+  "version": "1.0.0",
+  "description": "Interactive operational approach visualization tool for joint military planning",
+  "main": "server/index.js",
+  "scripts": {
+    "client": "cd client && npm start",
+    "server": "cd server && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "postinstall": "cd server && npm install && cd ../client && npm install",
+    "deploy:build": "cd client && npm run build"
+  },
+  "keywords": ["military", "planning", "gantt", "operational-approach", "visualization"],
+  "author": "VitalPoint AI",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

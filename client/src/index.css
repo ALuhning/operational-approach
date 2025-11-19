@@ -1,0 +1,105 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Vis-timeline custom styles - Solid Gantt bars */
+.vis-timeline {
+  border: none;
+  font-family: inherit;
+  background: #f5f5f5;
+}
+
+.vis-panel.vis-center,
+.vis-panel.vis-left,
+.vis-panel.vis-right,
+.vis-panel.vis-top,
+.vis-panel.vis-bottom {
+  border: none;
+}
+
+.vis-item {
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  height: 30px !important;
+}
+
+.vis-item.vis-range {
+  border: none;
+}
+
+.vis-item.vis-selected {
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.4);
+  transform: scale(1.05);
+  z-index: 999;
+}
+
+.vis-item.decisive-point {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  background-color: #ffd700 !important;
+  color: #000 !important;
+  font-weight: bold;
+  border: none !important;
+}
+
+.vis-item.decision-point {
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  background-color: #ffd700 !important;
+  color: #000 !important;
+  font-weight: bold;
+  border: none !important;
+}
+
+.vis-labelset .vis-label {
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+  font-weight: 600;
+  color: #333;
+}
+
+.vis-time-axis .vis-text {
+  color: #666;
+  font-size: 11px;
+}
+
+.vis-time-axis .vis-grid.vis-minor {
+  border-color: #e8e8e8;
+}
+
+.vis-time-axis .vis-grid.vis-major {
+  border-color: #d0d0d0;
+}
+
+/* Hide vertical grid lines for cleaner look */
+.vis-panel.vis-center .vis-grid.vis-vertical {
+  opacity: 0.3;
+}
+
+/* Make group labels more prominent */
+.vis-label {
+  padding: 8px 12px !important;
+}
+
+/* Smooth transitions */
+.vis-item {
+  transition: all 0.2s ease;
+}
+
