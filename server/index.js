@@ -73,8 +73,10 @@ const startServer = async () => {
     console.log('Database connection established successfully.');
 
     // Sync database (use { force: false } in production)
-    await sequelize.sync({ force: false });
-    console.log('Database synchronized.');
+    // Force reset if FORCE_DB_RESET environment variable is set
+    const forceReset = process.env.FORCE_DB_RESET === 'true';
+    await sequelize.sync({ force: forceReset });
+    console.log(`Database synchronized${forceReset ? ' (FORCE RESET)' : ''}.`);
 
     // Auto-seed database if empty (production only)
     if (process.env.NODE_ENV === 'production') {
