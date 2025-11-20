@@ -270,9 +270,9 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
         // Calculate LOE block height (header + all IMOs)
         const loeHeaderHeight = 30;
         let loeBlockHeight = loeHeaderHeight + 2;
-        const imoEntries = Object.entries(imos);
-        const sortedImos = sortByNumericId(imoEntries, ([imo, oais]) => oais[0]?.imoId);
-        sortedImos.forEach(([imo, oaisInIMO]) => {
+        const imoEntriesForHeight = Object.entries(imos);
+        const sortedImosForHeight = sortByNumericId(imoEntriesForHeight, ([imo, oais]) => oais[0]?.imoId);
+        sortedImosForHeight.forEach(([imo, oaisInIMO]) => {
           const rowHeight = 28;
           const headerHeight = 25;
           const imoHeight = headerHeight + (oaisInIMO.length * rowHeight);
