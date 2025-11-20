@@ -294,6 +294,9 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
             const positionsMoved = Math.round(deltaY / loeBlockHeight);
             const targetIndex = Math.max(0, Math.min(loeKeys.length - 1, draggedIndex + positionsMoved));
             
+            // Store the target index for this drag operation
+            draggedLoeItem.targetIndex = targetIndex;
+            
             if (loe === verticalDragOffset.itemId) {
               loeYOffset = deltaY;
             } else if (draggedIndex < targetIndex && loeIdx > draggedIndex && loeIdx <= targetIndex) {
@@ -367,6 +370,9 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
               const avgImoHeight = imoHeight + 3; // including spacing
               const positionsMoved = Math.round(deltaY / avgImoHeight);
               const targetIndex = Math.max(0, Math.min(imoKeys.length - 1, draggedIndex + positionsMoved));
+              
+              // Store the target index for this drag operation
+              draggedImoItem.targetIndex = targetIndex;
               
               if (imo === verticalDragOffset.itemId) {
                 imoYOffset += deltaY;
@@ -1295,11 +1301,26 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
             const y = e.clientY - rect.top;
             const deltaY = y - verticalDrag.startY;
             
-            // Calculate new index based on deltaY
-            const rowHeight = verticalDrag.type === 'oai' ? 28 : verticalDrag.type === 'imo' ? 25 : 30;
-            const positionsMoved = Math.round(deltaY / rowHeight);
+            // For IMOs and LOEs, use the targetIndex calculated during rendering
+            // For OAIs, calculate positionsMoved based on fixed row height
+            let positionsMoved;
             
-            if (Math.abs(positionsMoved) > 0 && Math.abs(deltaY) > rowHeight / 2) {
+            if (verticalDrag.type === 'imo' && verticalDrag.item.targetIndex !== undefined) {
+              // Use the targetIndex that was calculated in the rendering pass
+              positionsMoved = verticalDrag.item.targetIndex - verticalDrag.originalIndex;
+            } else if (verticalDrag.type === 'loe' && verticalDrag.item.targetIndex !== undefined) {
+              // Use the targetIndex that was calculated in the rendering pass
+              positionsMoved = verticalDrag.item.targetIndex - verticalDrag.originalIndex;
+            } else if (verticalDrag.type === 'oai') {
+              const rowHeight = 28;
+              positionsMoved = Math.round(deltaY / rowHeight);
+            } else {
+              // Fallback
+              const rowHeight = 30;
+              positionsMoved = Math.round(deltaY / rowHeight);
+            }
+            
+            if (Math.abs(positionsMoved) > 0) {
               onReorderItems(verticalDrag.type, verticalDrag.item, positionsMoved);
             }
             
