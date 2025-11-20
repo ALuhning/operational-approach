@@ -267,16 +267,14 @@ const Visualization = () => {
         
         setOais(updatedOais);
       } else if (type === 'imo') {
-        // Get all IMOs in the same LOE, sorted by current imoId
-        const loeImos = [...new Set(oais
-          .filter(o => o.objective === item.objective && o.loe === item.loe)
-          .map(o => o.imo)
-        )];
+        // Get all unique IMOs in the same LOE by imoId, not by text
+        const loeOais = oais.filter(o => o.objective === item.objective && o.loe === item.loe);
+        const uniqueImoIds = [...new Set(loeOais.map(o => o.imoId))];
         
         // Get IMO metadata for sorting
-        const imoData = loeImos.map(imo => {
-          const firstOai = oais.find(o => o.imo === imo && o.objective === item.objective && o.loe === item.loe);
-          return { imo, imoId: firstOai?.imoId || '' };
+        const imoData = uniqueImoIds.map(imoId => {
+          const firstOai = loeOais.find(o => o.imoId === imoId);
+          return { imo: firstOai.imo, imoId: imoId };
         }).sort((a, b) => {
           const aParts = a.imoId.split('.').map(Number);
           const bParts = b.imoId.split('.').map(Number);
@@ -295,9 +293,9 @@ const Visualization = () => {
           positionsMoved
         });
         
-        const oldIndex = imoData.findIndex(d => d.imo === item.imo);
+        const oldIndex = imoData.findIndex(d => d.imoId === item.imoId);
         if (oldIndex === -1) {
-          console.error('Could not find IMO in sorted list:', item.imo);
+          console.error('Could not find IMO in sorted list:', item.imoId);
           return;
         }
         
@@ -354,16 +352,14 @@ const Visualization = () => {
         
         setOais(updatedOais);
       } else if (type === 'loe') {
-        // Get all LOEs in the same objective, sorted by current loeId
-        const objLoes = [...new Set(oais
-          .filter(o => o.objective === item.objective)
-          .map(o => o.loe)
-        )];
+        // Get all unique LOEs in the same objective by loeId, not by text
+        const objOais = oais.filter(o => o.objective === item.objective);
+        const uniqueLoeIds = [...new Set(objOais.map(o => o.loeId))];
         
         // Get LOE metadata for sorting
-        const loeData = objLoes.map(loe => {
-          const firstOai = oais.find(o => o.loe === loe && o.objective === item.objective);
-          return { loe, loeId: firstOai?.loeId || '' };
+        const loeData = uniqueLoeIds.map(loeId => {
+          const firstOai = objOais.find(o => o.loeId === loeId);
+          return { loe: firstOai.loe, loeId: loeId };
         }).sort((a, b) => {
           const aParts = a.loeId.split('.').map(Number);
           const bParts = b.loeId.split('.').map(Number);
@@ -374,7 +370,7 @@ const Visualization = () => {
           return 0;
         });
         
-        const oldIndex = loeData.findIndex(d => d.loe === item.loe);
+        const oldIndex = loeData.findIndex(d => d.loeId === item.loeId);
         if (oldIndex === -1) return;
         
         const newIndex = Math.max(0, Math.min(loeData.length - 1, oldIndex + positionsMoved));
