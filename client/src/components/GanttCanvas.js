@@ -1261,10 +1261,9 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
             // Calculate new index based on deltaY
             const rowHeight = verticalDrag.type === 'oai' ? 28 : verticalDrag.type === 'imo' ? 25 : 30;
             const positionsMoved = Math.round(deltaY / rowHeight);
-            const newIndex = Math.max(0, verticalDrag.originalIndex + positionsMoved);
             
-            if (newIndex !== verticalDrag.originalIndex && Math.abs(deltaY) > rowHeight / 2) {
-              onReorderItems(verticalDrag.type, verticalDrag.item, newIndex);
+            if (Math.abs(positionsMoved) > 0 && Math.abs(deltaY) > rowHeight / 2) {
+              onReorderItems(verticalDrag.type, verticalDrag.item, positionsMoved);
             }
             
             setVerticalDrag(null);
@@ -1284,24 +1283,29 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
           const x = e.clientX - rect.left;
           const deltaX = x - dragging.startX;
           
-          // Convert deltaX to time delta
+          // Create helper functions to convert between dates and X coordinates
           const timelineStart = new Date(new Date(oais[0]?.startDate || Date.now()).getFullYear(), 0, 1).getTime();
           const timelineEnd = new Date(2030, 11, 31).getTime();
           const timelineSpan = timelineEnd - timelineStart;
-          const chartWidth = canvas.width;
+          const padding = { left: 0, right: 0, top: 40, bottom: 0 };
+          const chartWidth = canvas.width - padding.left - padding.right;
+          
+          // Convert pixel delta to time delta and get new date
+          const MS_PER_DAY = 24 * 60 * 60 * 1000;
           const timeDelta = (deltaX / chartWidth) * timelineSpan;
+          const daysDelta = Math.round(timeDelta / MS_PER_DAY);
           
           if (dragging.type === 'handle-start') {
             const currentStart = new Date(dragging.oai.startDate);
-            const newStart = new Date(currentStart.getTime() + timeDelta);
+            const newStart = new Date(currentStart.getTime() + (daysDelta * MS_PER_DAY));
             onUpdateOAI(dragging.oai.id, { startDate: newStart.toISOString().split('T')[0] });
           } else if (dragging.type === 'handle-end') {
             const currentEnd = new Date(dragging.oai.endDate);
-            const newEnd = new Date(currentEnd.getTime() + timeDelta);
+            const newEnd = new Date(currentEnd.getTime() + (daysDelta * MS_PER_DAY));
             onUpdateOAI(dragging.oai.id, { endDate: newEnd.toISOString().split('T')[0] });
           } else if (dragging.type === 'point') {
             const currentDate = new Date(dragging.item.date);
-            const newDate = new Date(currentDate.getTime() + timeDelta);
+            const newDate = new Date(currentDate.getTime() + (daysDelta * MS_PER_DAY));
             
             // Determine the correct date field based on point type and number
             const pointType = dragging.item.type; // 'decisivePoint' or 'decisionPoint'

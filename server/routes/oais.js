@@ -95,7 +95,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 // Bulk update OAIs (for drag-and-drop timeline adjustments)
 router.put('/bulk/update', authenticate, async (req, res) => {
   try {
-    const { updates } = req.body; // Array of { id, startPhase, endPhase, duration }
+    const { updates } = req.body; // Array of { id, startPhase, endPhase, duration, subOaiId, etc. }
 
     if (!Array.isArray(updates)) {
       return res.status(400).json({ error: { message: 'Updates must be an array' } });
@@ -113,11 +113,16 @@ router.put('/bulk/update', authenticate, async (req, res) => {
       });
 
       if (oai) {
-        await oai.update({
-          startPhase: update.startPhase,
-          endPhase: update.endPhase,
-          duration: update.duration
-        });
+        // Build update object with only provided fields
+        const updateData = {};
+        if (update.startPhase !== undefined) updateData.startPhase = update.startPhase;
+        if (update.endPhase !== undefined) updateData.endPhase = update.endPhase;
+        if (update.duration !== undefined) updateData.duration = update.duration;
+        if (update.subOaiId !== undefined) updateData.subOaiId = update.subOaiId;
+        if (update.startDate !== undefined) updateData.startDate = update.startDate;
+        if (update.endDate !== undefined) updateData.endDate = update.endDate;
+        
+        await oai.update(updateData);
         results.push(oai);
       }
     }

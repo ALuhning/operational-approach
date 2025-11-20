@@ -95,7 +95,11 @@ const Visualization = () => {
       const data = await api.getDataset(datasetId);
       console.log('Loaded dataset:', data); // Debug log
       setDataset(data);
-      setOais(data.oais || []);
+      // Sort OAIs by subOaiId to ensure correct display order
+      const sortedOais = (data.oais || []).sort((a, b) => 
+        (a.subOaiId || '').localeCompare(b.subOaiId || '')
+      );
+      setOais(sortedOais);
       
       // Initialize LOE and IMO filters
       const loes = {};
@@ -180,35 +184,79 @@ const Visualization = () => {
     setEditOAIDialogOpen(true);
   };
 
-  const handleReorderItems = async (type, item, newIndex) => {
+  const handleReorderItems = async (type, item, positionsMoved) => {
     try {
       if (type === 'oai') {
-        // Get all OAIs in the same IMO
+        // Get all OAIs in the same IMO, sorted by current subOaiId
         const imoOais = oais.filter(o => 
           o.objective === item.objective && 
           o.loe === item.loe && 
           o.imo === item.imo
         ).sort((a, b) => (a.subOaiId || '').localeCompare(b.subOaiId || ''));
         
-        const oldIndex = item.oaiIndex;
-        if (oldIndex === newIndex || newIndex >= imoOais.length || newIndex < 0) return;
+        // Find the actual current index in the sorted array
+        const oldIndex = imoOais.findIndex(o => o.id === item.oai.id);
+        if (oldIndex === -1) {
+          console.error('Could not find OAI in sorted list:', item.oai.id);
+          return;
+        }
+        
+        // Calculate new index with bounds checking
+        const newIndex = Math.max(0, Math.min(imoOais.length - 1, oldIndex + positionsMoved));
+        if (oldIndex === newIndex) {
+          console.log('No change in position, oldIndex === newIndex:', oldIndex);
+          return;
+        }
+        
+        console.log('Reordering OAI:', {
+          oaiId: item.oai.id,
+          subOaiId: item.oai.subOaiId,
+          oldIndex,
+          newIndex,
+          positionsMoved,
+          totalOAIs: imoOais.length
+        });
         
         // Reorder the array
         const reordered = [...imoOais];
         const [moved] = reordered.splice(oldIndex, 1);
         reordered.splice(newIndex, 0, moved);
         
-        // Get base ID from IMO or create one
-        const baseId = item.imoId || item.imo?.split(' ')[0] || 'OAI';
+        // Get base ID - use imoId if available, otherwise try to extract from existing subOaiId
+        let baseId;
+        if (item.imoId) {
+          baseId = item.imoId;
+        } else if (moved.subOaiId && moved.subOaiId.includes('.')) {
+          // Extract base from existing subOaiId (e.g., "1.1.1.a" -> "1.1.1")
+          const parts = moved.subOaiId.split('.');
+          // Remove the last part (which might be a letter)
+          baseId = parts.slice(0, -1).join('.');
+        } else {
+          baseId = 'OAI';
+        }
         
-        // Update IDs based on new positions
-        const updates = reordered.map((oai, idx) => ({
-          id: oai.id,
-          subOaiId: `${baseId}.${idx + 1}`
-        }));
+        console.log('Using baseId:', baseId, 'from imoId:', item.imoId);
+        
+        // Update IDs based on new positions - use letter suffixes (a, b, c, etc.)
+        const updates = reordered.map((oai, idx) => {
+          const letterSuffix = String.fromCharCode(97 + idx); // 97 is 'a'
+          return {
+            id: oai.id,
+            subOaiId: `${baseId}.${letterSuffix}`
+          };
+        });
+        
+        console.log('Sending bulk update:', updates);
         
         await api.bulkUpdateOAIs(updates);
-        await loadDataset();
+        
+        // Update local state immediately without refetching
+        const updatedOais = oais.map(oai => {
+          const update = updates.find(u => u.id === oai.id);
+          return update ? { ...oai, subOaiId: update.subOaiId } : oai;
+        }).sort((a, b) => (a.subOaiId || '').localeCompare(b.subOaiId || ''));
+        
+        setOais(updatedOais);
       } else if (type === 'imo') {
         // Reordering IMOs requires updating all subordinate OAIs
         // This is complex - for now, show a message
