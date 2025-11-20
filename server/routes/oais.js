@@ -119,6 +119,8 @@ router.put('/bulk/update', authenticate, async (req, res) => {
         if (update.endPhase !== undefined) updateData.endPhase = update.endPhase;
         if (update.duration !== undefined) updateData.duration = update.duration;
         if (update.subOaiId !== undefined) updateData.subOaiId = update.subOaiId;
+        if (update.loeId !== undefined) updateData.loeId = update.loeId;
+        if (update.imoId !== undefined) updateData.imoId = update.imoId;
         if (update.startDate !== undefined) updateData.startDate = update.startDate;
         if (update.endDate !== undefined) updateData.endDate = update.endDate;
         

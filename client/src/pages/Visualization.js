@@ -267,11 +267,147 @@ const Visualization = () => {
         
         setOais(updatedOais);
       } else if (type === 'imo') {
-        // Reordering IMOs requires updating all subordinate OAIs
-        // This is complex - for now, show a message
-        setError('IMO reordering will be implemented in next update');
+        // Get all IMOs in the same LOE, sorted by current imoId
+        const loeImos = [...new Set(oais
+          .filter(o => o.objective === item.objective && o.loe === item.loe)
+          .map(o => o.imo)
+        )];
+        
+        // Get IMO metadata for sorting
+        const imoData = loeImos.map(imo => {
+          const firstOai = oais.find(o => o.imo === imo && o.objective === item.objective && o.loe === item.loe);
+          return { imo, imoId: firstOai?.imoId || '' };
+        }).sort((a, b) => {
+          const aParts = a.imoId.split('.').map(Number);
+          const bParts = b.imoId.split('.').map(Number);
+          for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+            const diff = (aParts[i] || 0) - (bParts[i] || 0);
+            if (diff !== 0) return diff;
+          }
+          return 0;
+        });
+        
+        const oldIndex = imoData.findIndex(d => d.imo === item.imo);
+        if (oldIndex === -1) return;
+        
+        const newIndex = Math.max(0, Math.min(imoData.length - 1, oldIndex + positionsMoved));
+        if (oldIndex === newIndex) return;
+        
+        // Reorder
+        const reordered = [...imoData];
+        const [moved] = reordered.splice(oldIndex, 1);
+        reordered.splice(newIndex, 0, moved);
+        
+        // Get base ID from loeId
+        const baseId = item.loeId || reordered[0].imoId.split('.').slice(0, -1).join('.');
+        
+        // Generate new imoIds
+        const updates = [];
+        reordered.forEach((imoItem, idx) => {
+          const newImoId = `${baseId}.${idx + 1}`;
+          const affectedOais = oais.filter(o => 
+            o.objective === item.objective && 
+            o.loe === item.loe && 
+            o.imo === imoItem.imo
+          );
+          
+          affectedOais.forEach(oai => {
+            // Update imoId and potentially subOaiId
+            let newSubOaiId = oai.subOaiId;
+            if (oai.subOaiId && oai.subOaiId.startsWith(imoItem.imoId)) {
+              newSubOaiId = oai.subOaiId.replace(imoItem.imoId, newImoId);
+            }
+            updates.push({
+              id: oai.id,
+              imoId: newImoId,
+              subOaiId: newSubOaiId
+            });
+          });
+        });
+        
+        await api.bulkUpdateOAIs(updates);
+        
+        // Update local state
+        const updatedOais = oais.map(oai => {
+          const update = updates.find(u => u.id === oai.id);
+          return update ? { ...oai, imoId: update.imoId, subOaiId: update.subOaiId } : oai;
+        }).sort((a, b) => (a.subOaiId || '').localeCompare(b.subOaiId || ''));
+        
+        setOais(updatedOais);
       } else if (type === 'loe') {
-        setError('LOE reordering will be implemented in next update');
+        // Get all LOEs in the same objective, sorted by current loeId
+        const objLoes = [...new Set(oais
+          .filter(o => o.objective === item.objective)
+          .map(o => o.loe)
+        )];
+        
+        // Get LOE metadata for sorting
+        const loeData = objLoes.map(loe => {
+          const firstOai = oais.find(o => o.loe === loe && o.objective === item.objective);
+          return { loe, loeId: firstOai?.loeId || '' };
+        }).sort((a, b) => {
+          const aParts = a.loeId.split('.').map(Number);
+          const bParts = b.loeId.split('.').map(Number);
+          for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+            const diff = (aParts[i] || 0) - (bParts[i] || 0);
+            if (diff !== 0) return diff;
+          }
+          return 0;
+        });
+        
+        const oldIndex = loeData.findIndex(d => d.loe === item.loe);
+        if (oldIndex === -1) return;
+        
+        const newIndex = Math.max(0, Math.min(loeData.length - 1, oldIndex + positionsMoved));
+        if (oldIndex === newIndex) return;
+        
+        // Reorder
+        const reordered = [...loeData];
+        const [moved] = reordered.splice(oldIndex, 1);
+        reordered.splice(newIndex, 0, moved);
+        
+        // Get base ID from objectiveId
+        const baseId = item.objectiveId || reordered[0].loeId.split('.')[0];
+        
+        // Generate new loeIds and cascade to imoIds and subOaiIds
+        const updates = [];
+        reordered.forEach((loeItem, idx) => {
+          const newLoeId = `${baseId}.${idx + 1}`;
+          const affectedOais = oais.filter(o => 
+            o.objective === item.objective && 
+            o.loe === loeItem.loe
+          );
+          
+          affectedOais.forEach(oai => {
+            // Update loeId, imoId, and subOaiId
+            let newImoId = oai.imoId;
+            let newSubOaiId = oai.subOaiId;
+            
+            if (oai.imoId && oai.imoId.startsWith(loeItem.loeId)) {
+              newImoId = oai.imoId.replace(loeItem.loeId, newLoeId);
+            }
+            if (oai.subOaiId && oai.subOaiId.startsWith(loeItem.loeId)) {
+              newSubOaiId = oai.subOaiId.replace(loeItem.loeId, newLoeId);
+            }
+            
+            updates.push({
+              id: oai.id,
+              loeId: newLoeId,
+              imoId: newImoId,
+              subOaiId: newSubOaiId
+            });
+          });
+        });
+        
+        await api.bulkUpdateOAIs(updates);
+        
+        // Update local state
+        const updatedOais = oais.map(oai => {
+          const update = updates.find(u => u.id === oai.id);
+          return update ? { ...oai, loeId: update.loeId, imoId: update.imoId, subOaiId: update.subOaiId } : oai;
+        }).sort((a, b) => (a.subOaiId || '').localeCompare(b.subOaiId || ''));
+        
+        setOais(updatedOais);
       }
     } catch (err) {
       console.error('Failed to reorder:', err);
