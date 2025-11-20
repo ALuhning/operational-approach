@@ -237,12 +237,21 @@ const Visualization = () => {
         
         console.log('Using baseId:', baseId, 'from imoId:', item.imoId);
         
-        // Update IDs based on new positions - use letter suffixes (a, b, c, etc.)
+        // Update IDs based on new positions - always use numeric format
+        // If there's only 1 OAI, use base ID only (e.g., "1.1.1")
+        // If there are multiple OAIs, use numeric suffixes (e.g., "1.1.1.1", "1.1.1.2")
         const updates = reordered.map((oai, idx) => {
-          const letterSuffix = String.fromCharCode(97 + idx); // 97 is 'a'
+          let newSubOaiId;
+          if (reordered.length === 1) {
+            // Single OAI: use base ID only
+            newSubOaiId = baseId;
+          } else {
+            // Multiple OAIs: use numeric suffixes (1, 2, 3, etc.)
+            newSubOaiId = `${baseId}.${idx + 1}`;
+          }
           return {
             id: oai.id,
-            subOaiId: `${baseId}.${letterSuffix}`
+            subOaiId: newSubOaiId
           };
         });
         

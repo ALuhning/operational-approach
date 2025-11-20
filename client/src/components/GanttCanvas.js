@@ -285,10 +285,13 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
         ctx.fillRect(padding.left + loeIndent, currentY, chartWidth - loeIndent, loeHeaderHeight);
         
         // Add LOE drag handle clickable area
+        const firstLoeOaiForIds = Object.values(hierarchy[objective][loe])[0]?.[0];
         items.push({
           type: 'loe-drag-handle',
           loe: loe,
           objective: objective,
+          loeId: firstLoeOaiForIds?.loeId || '',
+          objectiveId: firstLoeOaiForIds?.objectiveId || '',
           loeIndex: loeIdx,
           x: padding.left + loeIndent,
           y: loeStartY,
@@ -364,6 +367,9 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
             imo: imo,
             loe: loe,
             objective: objective,
+            imoId: imoId,
+            loeId: loeId,
+            objectiveId: objectiveId,
             imoIndex: imoIdx,
             loeIndex: loeIdx,
             x: padding.left + imoIndent,
@@ -424,6 +430,9 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
               imo: imo,
               loe: loe,
               objective: objective,
+              imoId: oai.imoId || imoId,
+              loeId: oai.loeId || loeId,
+              objectiveId: oai.objectiveId || objectiveId,
               oaiIndex: oaiIdx,
               imoIndex: imoIdx,
               loeIndex: loeIdx,
