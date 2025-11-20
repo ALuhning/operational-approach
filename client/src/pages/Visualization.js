@@ -285,35 +285,26 @@ const Visualization = () => {
           return 0;
         });
         
-        console.log('Reordering IMO:', {
-          imo: item.imo,
-          imoId: item.imoId,
-          totalIMOs: imoData.length,
-          imoData: imoData.map(d => ({ imo: d.imo, imoId: d.imoId })),
-          positionsMoved
-        });
-        
         const oldIndex = imoData.findIndex(d => d.imoId === item.imoId);
-        if (oldIndex === -1) {
-          console.error('Could not find IMO in sorted list:', item.imoId);
-          return;
+        if (oldIndex === -1) return;
+        
+        // Calculate target index, clamped to valid range
+        let newIndex = oldIndex + positionsMoved;
+        
+        // When moving down (positive), we need to account for the removal
+        // When item is removed, everything shifts up, so target should be newIndex - 1
+        if (positionsMoved > 0) {
+          newIndex = Math.min(imoData.length - 1, newIndex);
+        } else {
+          newIndex = Math.max(0, newIndex);
         }
         
-        const newIndex = Math.max(0, Math.min(imoData.length - 1, oldIndex + positionsMoved));
+        if (oldIndex === newIndex) return;
         
-        console.log('IMO reorder indices:', { oldIndex, newIndex, positionsMoved });
-        
-        if (oldIndex === newIndex) {
-          console.log('No change in IMO position');
-          return;
-        }
-        
-        // Reorder
+        // Reorder via splice
         const reordered = [...imoData];
         const [moved] = reordered.splice(oldIndex, 1);
         reordered.splice(newIndex, 0, moved);
-        
-        console.log('Reordered IMOs:', reordered.map(d => ({ imo: d.imo, imoId: d.imoId })));
         
         // Get base ID from loeId
         const baseId = item.loeId || reordered[0].imoId.split('.').slice(0, -1).join('.');
