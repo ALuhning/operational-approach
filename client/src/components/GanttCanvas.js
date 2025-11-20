@@ -311,13 +311,12 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
         ctx.fillRect(padding.left + loeIndent, currentY, chartWidth - loeIndent, loeHeaderHeight);
         
         // Add LOE drag handle clickable area
-        const firstLoeOaiForIds = Object.values(hierarchy[objective][loe])[0]?.[0];
         items.push({
           type: 'loe-drag-handle',
           loe: loe,
           objective: objective,
-          loeId: firstLoeOaiForIds?.loeId || '',
-          objectiveId: firstLoeOaiForIds?.objectiveId || '',
+          loeId: firstLoeOAI?.loeId || '',
+          objectiveId: firstLoeOAI?.objectiveId || '',
           loeIndex: loeIdx,
           x: padding.left + loeIndent,
           y: loeStartY,

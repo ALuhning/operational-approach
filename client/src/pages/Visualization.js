@@ -287,16 +287,35 @@ const Visualization = () => {
           return 0;
         });
         
+        console.log('Reordering IMO:', {
+          imo: item.imo,
+          imoId: item.imoId,
+          totalIMOs: imoData.length,
+          imoData: imoData.map(d => ({ imo: d.imo, imoId: d.imoId })),
+          positionsMoved
+        });
+        
         const oldIndex = imoData.findIndex(d => d.imo === item.imo);
-        if (oldIndex === -1) return;
+        if (oldIndex === -1) {
+          console.error('Could not find IMO in sorted list:', item.imo);
+          return;
+        }
         
         const newIndex = Math.max(0, Math.min(imoData.length - 1, oldIndex + positionsMoved));
-        if (oldIndex === newIndex) return;
+        
+        console.log('IMO reorder indices:', { oldIndex, newIndex, positionsMoved });
+        
+        if (oldIndex === newIndex) {
+          console.log('No change in IMO position');
+          return;
+        }
         
         // Reorder
         const reordered = [...imoData];
         const [moved] = reordered.splice(oldIndex, 1);
         reordered.splice(newIndex, 0, moved);
+        
+        console.log('Reordered IMOs:', reordered.map(d => ({ imo: d.imo, imoId: d.imoId })));
         
         // Get base ID from loeId
         const baseId = item.loeId || reordered[0].imoId.split('.').slice(0, -1).join('.');
