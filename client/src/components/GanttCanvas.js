@@ -212,6 +212,25 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
       const ratio = (date.getTime() - timelineStart) / timelineSpan;
       return padding.left + (chartWidth * Math.max(0, Math.min(1, ratio)));
     };
+    
+    // Function to sort IDs numerically (e.g., "1.1.2" before "1.1.10")
+    const sortByNumericId = (items, getId) => {
+      return items.sort((a, b) => {
+        const aId = getId(a);
+        const bId = getId(b);
+        if (!aId || !bId) return 0;
+        
+        const aParts = aId.split('.').map(Number);
+        const bParts = bId.split('.').map(Number);
+        
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+          const aNum = aParts[i] || 0;
+          const bNum = bParts[i] || 0;
+          if (aNum !== bNum) return aNum - bNum;
+        }
+        return 0;
+      });
+    };
 
     let currentY = padding.top + 10;
 
@@ -236,17 +255,24 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
       
       currentY += objHeaderHeight + 2; // Add spacing after Objective header
       
-      const loeKeys = Object.keys(hierarchy[objective]);
-      Object.keys(hierarchy[objective]).forEach((loe, loeIdx) => {
-        const firstLoeOAI = Object.values(hierarchy[objective][loe])[0] &&
-                           Object.values(hierarchy[objective][loe])[0][0];
+      // Sort LOEs by their numeric ID
+      const loeEntries = Object.entries(hierarchy[objective]);
+      const sortedLoes = sortByNumericId(loeEntries, ([loe, imos]) => {
+        const firstOai = Object.values(imos)[0]?.[0];
+        return firstOai?.loeId;
+      });
+      const loeKeys = sortedLoes.map(([loe]) => loe);
+      
+      sortedLoes.forEach(([loe, imos], loeIdx) => {
+        const firstLoeOAI = Object.values(imos)[0]?.[0];
         const loeId = firstLoeOAI?.loeId || '';
         
         // Calculate LOE block height (header + all IMOs)
         const loeHeaderHeight = 30;
         let loeBlockHeight = loeHeaderHeight + 2;
-        Object.keys(hierarchy[objective][loe]).forEach((imo) => {
-          const oaisInIMO = hierarchy[objective][loe][imo];
+        const imoEntries = Object.entries(imos);
+        const sortedImos = sortByNumericId(imoEntries, ([imo, oais]) => oais[0]?.imoId);
+        sortedImos.forEach(([imo, oaisInIMO]) => {
           const rowHeight = 28;
           const headerHeight = 25;
           const imoHeight = headerHeight + (oaisInIMO.length * rowHeight);
@@ -313,9 +339,12 @@ const GanttCanvas = ({ oais, filters, viewMode, problemStatement, currentOE, des
         
         currentY += loeHeaderHeight + 2; // Add spacing after LoE header
         
-        const imoKeys = Object.keys(hierarchy[objective][loe]);
-        Object.keys(hierarchy[objective][loe]).forEach((imo, imoIdx) => {
-          const oaisInIMO = hierarchy[objective][loe][imo];
+        // Sort IMOs by their numeric ID
+        const imoEntries = Object.entries(imos);
+        const sortedImos = sortByNumericId(imoEntries, ([imo, oais]) => oais[0]?.imoId);
+        const imoKeys = sortedImos.map(([imo]) => imo);
+        
+        sortedImos.forEach(([imo, oaisInIMO], imoIdx) => {
           const imoId = oaisInIMO[0]?.imoId || '';
           
           // Calculate IMO bucket height (header + one row per OAI)
